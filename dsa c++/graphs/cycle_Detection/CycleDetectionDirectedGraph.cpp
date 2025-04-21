@@ -1,54 +1,38 @@
-#include <iostream>
-#include <vector>
-
+#include<bits/stdc++.h>
 using namespace std;
-
-bool dfs(int node, vector<vector<int>>& adjList, vector<bool>& visited, vector<bool>& recStack) {
-    visited[node] = true;
-    recStack[node] = true;
-
-    for (int neighbor : adjList[node]) {
-        if (!visited[neighbor]) {
-            //if dfs() true means cycle is found and return true at all remaining rec calls 
-            if (dfs(neighbor, adjList, visited, recStack)) {
+bool dfs(int node,vector<int> &dfsVisited,vector<int> &visited,vector<vector<int>> &adjList){
+    visited[node]=1;
+    dfsVisited[node]=1;
+    for(auto nbr:adjList[node]){
+        if(!visited[nbr]){
+            if(dfs(nbr,dfsVisited,visited,adjList)){
                 return true;
             }
-        } else if (recStack[neighbor]) {
-            // Back edge found, cycle detected
+        }else{
+            if(dfsVisited[nbr]){
+                return true;
+            }
+        }
+    }
+    dfsVisited[node]=0;
+    return false;
+}
+bool detectCycleInDirectedGraph(int n,vector<pair<int,int>> &edges){
+    vector<vector<int>> adjList(n+1);
+    for(int i=0;i<edges.size();i++){
+        int u=edges[i].first;
+        int v=edges[i].second;
+        adjList[u].push_back(v);
+    }
+    vector<int> dfsVisited(n+1,0);
+    vector<int> visited(n+1,0);
+    for(int i=1;i<=n;i++){
+        if(dfs(i,dfsVisited,visited,adjList)){
             return true;
         }
     }
-
-    recStack[node] = false; // Remove the node from the recursion stack
     return false;
 }
-
-bool detectCycleInDirectedGraph(int n, vector<pair<int, int>>& edges) {
-    // Create adjacency list
-    vector<vector<int>> adjList(n);
-
-    for (auto& edge : edges) {
-        int u = edge.first - 1; // Adjust for 1-based indexing
-        int v = edge.second - 1;
-        adjList[u].push_back(v);
-    }
-
-    // Initialize visited and recursion stack arrays
-    vector<bool> visited(n, false);
-    vector<bool> recStack(n, false);
-
-    // Perform DFS for each unvisited node
-    for (int i = 0; i < n; ++i) {
-        if (!visited[i]) {
-            if (dfs(i, adjList, visited, recStack)) {
-                return true; // Cycle detected
-            }
-        }
-    }
-
-    return false; // No cycle detected
-}
-
 int main() {
     // Test case 1: Graph with a cycle (true)
     vector<pair<int,int>> edges1 = {{1, 2}, {2, 3}, {3, 4}, {4, 2}};

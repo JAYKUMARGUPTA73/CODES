@@ -1,24 +1,23 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-bool bfs(int start, vector<vector<int>> &adjList, vector<int> &parent, vector<int> &isVisited) {
+bool bfs(int src, vector<vector<int>> &adjList, vector<int> &parent, vector<int> &visited) {
     queue<int> q;
-    q.push(start);
-    isVisited[start] = 1; // Mark start node as visited
-    parent[start] = -1; // Start node has no parent
+    parent[src] = -1;
+    visited[src] = 1;
+    q.push(src);
 
     while (!q.empty()) {
-        int node = q.front();
+        int frontNode = q.front();
         q.pop();
 
-        for (int nbr : adjList[node]) {
-            if (!isVisited[nbr]) { 
-                parent[nbr] = node;
-                isVisited[nbr] = 1;
+        for (auto nbr : adjList[frontNode]) {
+            if (visited[nbr] && nbr != parent[frontNode]) {
+                return true;  // Cycle detected
+            } else if (!visited[nbr]) {
                 q.push(nbr);
-            } else if (parent[node] != nbr) { 
-                // If the neighbor is already visited and is not the parent of the current node, cycle detected
-                return true;
+                parent[nbr] = frontNode;  // ✅ Fix: assign parent correctly
+                visited[nbr] = 1;
             }
         }
     }
@@ -27,23 +26,26 @@ bool bfs(int start, vector<vector<int>> &adjList, vector<int> &parent, vector<in
 
 bool isCyclic(vector<vector<int>> &adjList, int n) {
     vector<int> parent(n + 1, -1);
-    vector<int> isVisited(n + 1, 0);
+    vector<int> visited(n + 1, 0);
 
     for (int i = 1; i <= n; i++) {
-        if (!isVisited[i]) {
-            if (bfs(i, adjList, parent, isVisited)) 
-                return true;
+        if (!visited[i]) {
+            if (bfs(i, adjList, parent, visited)) {
+                return true;  // Cycle detected
+            }
         }
     }
-    return false;
+    return false;  // No cycle found
 }
 
 int main() {
-    vector<vector<int>> edges = {{1, 2}, {2, 3}, {4, 5}, {5, 6}, {6, 8}, {8, 9}, {5, 7}};
-    
+    vector<vector<int>> edges = {
+        {1, 2}, {2, 3}, {4, 5}, {5, 6},
+        {6, 8}, {8, 9}, {5, 7}
+    };
     int n = 9;
-    vector<vector<int>> adjList(n + 1); // Adjusted to 1-based indexing
 
+    vector<vector<int>> adjList(n + 1);
     for (auto &edge : edges) {
         int u = edge[0];
         int v = edge[1];
@@ -51,5 +53,6 @@ int main() {
         adjList[v].push_back(u);
     }
 
-    cout << (isCyclic(adjList, n) ? "Graph contains a cycle" : "Graph does not contain a cycle") << endl;
+    cout << (isCyclic(adjList, n) ? "Cycle detected" : "No cycle") << endl;
+    return 0;
 }

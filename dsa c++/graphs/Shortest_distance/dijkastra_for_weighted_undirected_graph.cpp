@@ -2,46 +2,45 @@
 using namespace std;
 
 vector<int> dijkstra(int src, int n, vector<vector<pair<int, int>>> &adjList) {
-    set<pair<int, int>> st; // Min-heap (sorted by distance)
-    vector<int> dist(n + 1, INT_MAX); // Stores shortest distances
-
-    // Initialize source
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+    vector<int> dist(n + 1, INT_MAX);
     dist[src] = 0;
-    st.insert({0, src});
+    pq.push({0, src}); // pair<distance, node val> 
 
-    while (!st.empty()) {
-        pair<int, int> top = *st.begin();  // Fix for structured bindings issue
-        int d = (int)top.first;
-        int node = top.second;
-        st.erase(st.begin());
+    while (!pq.empty()) {
+        auto front = pq.top();
+        pq.pop();
+        int d=front.first;
+        int node=front.second;
 
-        for (auto &nbr : adjList[node]) {
-            int v = nbr.first;
-            int weight = nbr.second;
-            if (dist[node] + weight < dist[v]) { // Found a shorter path
-                st.erase({dist[v], v}); // Remove old entry (if exists)
-                dist[v] = dist[node] + weight;
-                st.insert({dist[v], v});
+        // Skip if we've already found a better path
+        if (d > dist[node]) continue;
+
+        for (auto &it : adjList[node]) {
+            int weight=it.second;
+            int nbr=it.first;
+            if (dist[node] + weight < dist[nbr]) {
+                dist[nbr] = dist[node] + weight;
+                pq.push({dist[nbr], nbr});
             }
         }
     }
+
     return dist;
 }
 
 int main() {
     vector<vector<int>> edges = {{1, 2, 4}, {1, 3, 1}, {2, 3, 2}, {2, 4, 5}, {3, 4, 8}, {3, 5, 10}, {4, 5, 2}};
+    int n = 5;
 
-    int n = 5; // Number of nodes
-
-    // Prepare adjacency list
     vector<vector<pair<int, int>>> adjList(n + 1);
     for (auto &edge : edges) {
         int u = edge[0], v = edge[1], w = edge[2];
         adjList[u].push_back({v, w});
-        adjList[v].push_back({u, w}); // Since graph is undirected
+        adjList[v].push_back({u, w});
     }
 
-    int src = 1; // Source node
+    int src = 1;
     vector<int> shortestDist = dijkstra(src, n, adjList);
 
     cout << "Shortest distances from node " << src << ":\n";
